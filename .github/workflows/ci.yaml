@@ -31,3 +31,32 @@ jobs: # A workflow run is made up of one or more jobs that can run sequentially 
     - name: Run tests
       run: |
         python3 -m unittest discover -s tests
+
+  build-and-push: # This is the NEW JOB we are adding
+    needs: test # This ensures this job only runs if the 'test' job succeeds
+    runs-on: ubuntu-latest
+    # Only build and push on pushes to main (not pull requests)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./Dockerfile
+        push: true
+        tags: |
+          ${{ secrets.DOCKERHUB_USERNAME }}/my-python-ci-app:latest
+          ${{ secrets.DOCKERHUB_USERNAME }}/my-python-ci-app:${{ github.sha }}

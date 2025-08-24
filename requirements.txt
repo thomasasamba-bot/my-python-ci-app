@@ -1,0 +1,6 @@
+# Testing dependencies (optional for future use)
+# pytest==7.0.0
+# coverage==6.0.0
+
+# Project dependencies
+# Add your project dependencies here when needed

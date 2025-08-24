@@ -1,0 +1,33 @@
+name: Python CI # Continuous Integration
+
+#When to run the workflow: on every push and pull request to the main branch
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ] 
+
+jobs: # A workflow run is made up of one or more jobs that can run sequentially or in parallel
+  test: # This workflow contains a single job called "test"
+    runs-on: ubuntu-latest # The OS for the job to run on
+
+    steps: # A list of steps to be executed as part of the job
+    # Step 1: Checkout the code from the repository
+    - uses: actions/checkout@v4
+
+    #step 2: Set up Python environment
+    - name: Set up Python 3.13
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.13'
+
+    # Step 3: Installs dependencies from requirements.txt file using pip
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    #Step 4: Run tests with unittest
+    - name: Run tests
+      run: |
+        python3 -m unittest discover -s tests

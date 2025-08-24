@@ -11,6 +11,8 @@ A simple Python application to demonstrate a Continuous Integration (CI) pipelin
 - **Python 3.13**
 - **unittest** (Python's built-in testing framework)
 - **GitHub Actions** (for CI/CD automation)
+- **Docker** (for containerization)
+
 
 ## 📦 What's Inside
 
@@ -18,6 +20,22 @@ A simple Python application to demonstrate a Continuous Integration (CI) pipelin
 - `main.py`: A script that uses the `add()` function.
 - `tests/test_calculator.py`: Unit tests for the `add()` function.
 - `.github/workflows/ci.yml`: The GitHub Actions workflow configuration.
+- `Dockerfile`: Instructions to build a Docker image for this application.
+
+## 🐳 Running with Docker
+
+1.  **Build the image:**
+    docker build -t your-dockerhub-username/my-python-ci-demo:latest .
+    
+
+⁠ 2.  **Run the container:**
+    docker run your-dockerhub-username/my-python-ci-demo:latest
+    
+⁠     *Output:* `The result is 8`
+
+3.  **The built image is also available on Docker Hub:**
+    docker pull your-dockerhub-username/my-python-ci-demo:latest
+    
 
 ## ✅ How to Run Locally
 

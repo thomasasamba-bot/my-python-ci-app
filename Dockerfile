@@ -19,4 +19,4 @@ RUN python -m unittest discover tests -v
 EXPOSE 80
 
 # Define the command to run the application when the container starts.
-CMD ["python3", "main.py"]# Docker build timestamp: Sun Aug 24 16:51:21 EAT 2025
+CMD ["python3", "main.py"]# Docker build timestamp: Sun Aug 24 16:51:21 EAT 2025# Docker build timestamp: Sun Aug 24 16:59:48 EAT 2025

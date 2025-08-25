@@ -13,10 +13,10 @@ WORKDIR /app
 COPY . .
 
 # Run tests to ensure everything works
-RUN python -m unittest discover tests -v
+RUN python3 -m unittest discover tests -v
 
 # Inform Docker that the container listens on port 80 at runtime.
-EXPOSE 80
+#EXPOSE 80
 
 # Define the command to run the application when the container starts.
-CMD ["python3", "main.py"]# Docker build timestamp: Sun Aug 24 16:51:21 EAT 2025# Docker build timestamp: Sun Aug 24 16:59:48 EAT 2025
+CMD ["python3", "main.py"]

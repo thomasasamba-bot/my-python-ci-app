@@ -1,6 +1,6 @@
 # tests/test_calculator.py
 import unittest
-from calculator import add
+from src.calculator import add
 
 class TestCalculator(unittest.TestCase):
     def test_add(self):

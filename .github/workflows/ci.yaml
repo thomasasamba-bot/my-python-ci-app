@@ -30,6 +30,7 @@ jobs: # A workflow run is made up of one or more jobs that can run sequentially 
     #Step 4: Run tests with unittest
     - name: Run tests
       run: |
+        export PYTHONPATH=$PYTHONPATH:$(pwd)/src
         python3 -m unittest discover -s tests
 
   build-and-push: # This is the NEW JOB we are adding

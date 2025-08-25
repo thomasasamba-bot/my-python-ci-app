@@ -1,6 +1,7 @@
-# Testing dependencies (optional for future use)
+# Testing dependencies
 # pytest==7.0.0
 # coverage==6.0.0
+flask==2.3.3
 
 # Project dependencies
 # Add your project dependencies here when needed

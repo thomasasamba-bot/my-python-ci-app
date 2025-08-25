@@ -1,0 +1,161 @@
+# infrastructure.yaml
+
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Creates EC2 Instance with Docker and S3 Bucket for Python CI App. DevOps IaC Demo.'
+
+Parameters:
+  BucketNamePrefix:
+    Description: "A prefix for the S3 bucket name. Must be lowercase."
+    Type: String
+    Default: "my-python-ci-app-bucket"
+    AllowedPattern: "^[a-z0-9-]*$"
+    ConstraintDescription: "Must contain only lowercase letters, numbers, or hyphens."
+  
+  InstanceType:
+    Description: "EC2 instance type"
+    Type: String
+    Default: t3.micro
+    AllowedValues:
+      - t2.micro
+      - t3.micro
+      - t3.small
+    ConstraintDescription: "Must be a valid EC2 instance type."
+  
+  KeyName:
+    Description: "Name of an existing EC2 KeyPair to enable SSH access"
+    Type: AWS::EC2::KeyPair::KeyName
+    ConstraintDescription: "Must be the name of an existing EC2 KeyPair."
+
+Resources:
+  # S3 Bucket
+  DemoBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "${BucketNamePrefix}-${AWS::AccountId}"
+      AccessControl: Private
+      VersioningConfiguration:
+        Status: Enabled
+      Tags:
+        - Key: Name
+          Value: My Python CI App Bucket
+        - Key: Environment
+          Value: Dev
+        - Key: Project
+          Value: DevOps Learning
+        - Key: ManagedBy
+          Value: CloudFormation
+
+  # Security Group for EC2
+  DemoInstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable SSH and HTTP access
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+
+  # IAM Role for EC2 to access S3
+  EC2InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+      Tags:
+        - Key: Name
+          Value: EC2S3AccessRole
+
+  # EC2 Instance Profile
+  EC2InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - !Ref EC2InstanceRole
+
+  # EC2 Instance
+  DemoInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref InstanceType
+      ImageId: ami-0c02fb55956c7d316  # Amazon Linux 2 AMI (us-east-1)
+      KeyName: !Ref KeyName
+      SecurityGroupIds:
+        - !Ref DemoInstanceSecurityGroup
+      IamInstanceProfile: !Ref EC2InstanceProfile
+      Tags:
+        - Key: Name
+          Value: PythonCIAppServer
+        - Key: Environment
+          Value: Dev
+        - Key: Project
+          Value: DevOps Learning
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          # Update system and install Docker
+          yum update -y
+          amazon-linux-extras install docker -y
+          
+          # Start and enable Docker (using systemctl for modern Amazon Linux 2)
+          systemctl start docker
+          systemctl enable docker
+          usermod -a -G docker ec2-user
+          
+          # Install Docker Compose
+          curl -L "https://github.com/docker/compose/releases/download/v2.20.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          chmod +x /usr/local/bin/docker-compose
+          
+          # Pull and run your Docker image
+          docker pull thomasasamba/my-python-ci-app:latest
+          docker run -d -p 80:80 --name python-ci-app thomasasamba/my-python-ci-app:latest
+          
+          # Test S3 access (optional - only if IAM permissions are fixed)
+          cat > /tmp/test-s3-access.sh << 'EOL'
+          #!/bin/bash
+          echo "Testing S3 access at $(date)" > /tmp/s3-test-file.txt
+          aws s3 cp /tmp/s3-test-file.txt s3://${DemoBucket}/test-files/ || echo "S3 upload failed - check IAM permissions"
+          EOL
+          
+          chmod +x /tmp/test-s3-access.sh
+          /tmp/test-s3-access.sh
+
+Outputs:
+  BucketName:
+    Description: "The Name of the newly created S3 Bucket"
+    Value: !Ref DemoBucket
+  
+  BucketArn:
+    Description: "The ARN of the newly created S3 Bucket"
+    Value: !GetAtt DemoBucket.Arn
+  
+  InstanceId:
+    Description: "The Instance ID of the EC2 instance"
+    Value: !Ref DemoInstance
+  
+  InstancePublicIP:
+    Description: "Public IP address of the EC2 instance"
+    Value: !GetAtt DemoInstance.PublicIp
+  
+  InstancePublicDNS:
+    Description: "Public DNS name of the EC2 instance"
+    Value: !GetAtt DemoInstance.PublicDnsName
+  
+  WebsiteURL:
+    Description: "URL to access your Python application"
+    Value: !Sub http://${DemoInstance.PublicDnsName}
+  
+  S3ConsoleURL:
+    Description: "URL to access S3 bucket in AWS Console"
+    Value: !Sub https://s3.console.aws.amazon.com/s3/buckets/${DemoBucket}
